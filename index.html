@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>APOTEK BALI BAGAS MEDIKA</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+body{background:#f5f5f5;min-height:100vh;display:flex;flex-direction:column}
+.hdr{background:#1e40af;color:#fff;padding:14px 16px;text-align:center;font-size:16px;font-weight:600;letter-spacing:0.5px}
+.tabs{display:flex;background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10}
+.tab{flex:1;padding:12px 8px;border:none;background:none;cursor:pointer;color:#6b7280;font-size:12px;font-weight:500;border-bottom:2px solid transparent;transition:all 0.15s}
+.tab.active{color:#1e40af;border-bottom-color:#1e40af;font-weight:700}
+.ct{padding:10px;max-width:800px;margin:0 auto;width:100%;flex:1}
+.card{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.gr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.lb{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px}
+.vl{font-size:20px;font-weight:700}
+.chart-wrap{background:#fff;border-radius:10px;padding:12px;margin-bottom:10px}
+.chart-title{font-size:12px;font-weight:600;color:#374151;margin-bottom:8px}
+.bars{display:flex;gap:4px;align-items:flex-end;height:100px;padding:4px 0}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%}
+.bar-wrap .val{font-size:7px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center}
+.bar-wrap .bar{width:70%;max-width:30px;border-radius:3px 3px 0 0;margin-top:auto;transition:height 0.3s}
+.bar-wrap .lbl{font-size:9px;color:#374151;font-weight:600}
+.daily-chart{background:#fff;border-radius:10px;padding:12px;margin-bottom:10px;overflow-x:auto}
+.daily-chart .chart-title{margin-bottom:2px}
+.daily-chart .sub{font-size:9px;color:#9ca3af;margin-bottom:8px}
+.tw{background:#fff;border-radius:10px;overflow:hidden;margin-bottom:10px}
+.tw .tl{padding:10px 12px;font-size:12px;font-weight:600;color:#374151;border-bottom:1px solid #eee}
+.sc{overflow:auto;max-height:450px;-webkit-overflow-scrolling:touch}
+table{width:100%;font-size:10px;border-collapse:collapse}
+th{padding:6px 5px;font-size:8px;color:#6b7280;text-align:right;background:#f9fafb;position:sticky;top:0;border-bottom:1px solid #e5e7eb;white-space:nowrap}
+td{padding:5px;font-size:10px;color:#374151;text-align:right;border-bottom:1px solid #f3f4f6}
+td.l{text-align:left}
+tr:nth-child(even){background:#fafafa}
+.bdg{display:inline-block;padding:2px 8px;border-radius:999px;font-size:8px;font-weight:600}
+.bdg-green{background:#dcfce7;color:#16a34a}
+.bdg-red{background:#fee2e2;color:#dc2626}
+.bt{padding:6px 10px;border-radius:20px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-size:10px;margin:2px;font-weight:500;transition:all 0.15s}
+.bt.on{border-color:#1e40af;background:#1e40af;color:#fff}
+.bt-p{background:#1e40af;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600}
+select{padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:11px;background:#fff;max-width:200px}
+.line-chart{width:100%;height:auto;min-height:120px;margin-top:4px}
+.loading{text-align:center;padding:60px 20px;color:#9ca3af;font-size:14px}
+</style>
+</head>
+<body>
+<div class="hdr">APOTEK BALI BAGAS MEDIKA</div>
+<div class="tabs" id="tb"></div>
+<div class="ct" id="ct"><div class="loading">Memuat data...</div></div>
+<script>
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "data.json?t=" + Date.now(), true);
+xhr.onload = function() {
+  try {
+    var d = JSON.parse(xhr.responseText);
+    var P = d.penjualan || [], FA = d.faktur || [], LP = d.lph || {}, LD = d.lph_dates || [];
+    var TO = d.total_omzet || 0, KU = d.total_kunjungan || 0;
+    var BM = d.bulan_omzet || {}, BK = d.bulan_kunj || {};
+    var BL = "", FB = "", LC = LD.length ? LD[LD.length-1] : "";
+    
+    function $(s){ return document.getElementById(s); }
+    function f(n){ return typeof n === "number" ? "Rp " + n.toLocaleString("id-ID") : "-"; }
+    
+    var bn = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul"];
+    var bn_colors = ["#3b82f6","#8b5cf6","#ec4899","#f97316","#10b981","#14b8a6","#f59e0b"];
+    
+    function rT(){
+      var h = "";
+      h += '<button class="tab active" onclick="sw(\'p\')">PENJUALAN</button>';
+      h += '<button class="tab" onclick="sw(\'l\')">LPH</button>';
+      h += '<button class="tab" onclick="sw(\'f\')">FAKTUR</button>';
+      $("tb").innerHTML = h;
+    }
+    
+    function sw(k){
+      var b = $("tb").querySelectorAll(".tab");
+      for(var i=0;i<b.length;i++){ b[i].className = "tab"; }
+      var idx = ["p","l","f"].indexOf(k);
+      if(idx>=0) b[idx].className = "tab active";
+      r(k);
+    }
+    
+    function r(k){
+      if(k=="p") rP();
+      else if(k=="l") rL();
+      else rF();
+    }
+    
+    function rP(){
+      var f = BL ? P.filter(function(x){ return x.b == BL; }) : P;
+      var mt=0, mk=0;
+      for(var i=0;i<f.length;i++){ mt += f[i].tt; mk += f[i].kj; }
+      
+      var h = '<div style="margin-bottom:8px">';
+      for(var i=0;i<bn.length;i++){
+        h += '<button class="bt'+(BL==bn[i]?" on":"")+'" onclick="BL=\''+(BL==bn[i]?"":"")+bn[i]+"\';rP()">"+bn[i]+"</button>";
+      }
+      h += '<button class="bt'+(BL==""?" on":"")+'" onclick="BL=\'\';rP()">Semua</button>';
+      h += '</div>';
+      
+      h += '<div class="gr">';
+      h += '<div class="card"><div class="lb">Omzet'+(BL?" "+BL:" 2026")+'</div><div class="vl" style="color:#d97706">'+f(mt)+'</div></div>';
+      h += '<div class="card"><div class="lb">Kunjungan</div><div class="vl" style="color:#2563eb">'+mk.toLocaleString("id-ID")+'</div></div>';
+      h += '<div class="card"><div class="lb">Rata/Hari</div><div class="vl" style="color:#059669">'+f(f.length?Math.round(mt/f.length):0)+'</div></div>';
+      h += '<div class="card"><div class="lb">Faktur Belum</div><div class="vl" style="color:#dc2626">'+FA.filter(function(x){return !x.nb}).length+'</div></div>';
+      h += '</div>';
+      
+      // BULAN CHART
+      var maxO = 0;
+      for(var i=0;i<bn.length;i++){ if((BM[bn[i]]||0) > maxO) maxO = BM[bn[i]]; }
+      h += '<div class="chart-wrap"><div class="chart-title">Omzet per Bulan</div><div class="bars">';
+      for(var i=0;i<bn.length;i++){
+        var val = BM[bn[i]] || 0;
+        var pct = maxO > 0 ? (val/maxO)*85 : 0;
+        h += '<div class="bar-wrap"><div class="val">'+f(val)+'</div><div class="bar" style="height:'+Math.max(pct,3)+'px;background:'+bn_colors[i]+'"></div><div class="lbl">'+bn[i]+'</div></div>';
+      }
+      h += '</div></div>';
+      
+      // DAILY CHART (line chart handmade)
+      h += '<div class="daily-chart"><div class="chart-title">Omzet Harian'+(BL?" "+BL:"")+'</div><div class="sub">'+(BL?f.filter(function(x){return x.b==BL}).length+" hari":"212 hari")+'</div>';
+      var dailyData = BL ? f : P;
+      var maxD = 0;
+      for(var i=0;i<dailyData.length;i++){ if(dailyData[i].tt > maxD) maxD = dailyData[i].tt; }
+      if(dailyData.length > 0) {
+        h += '<svg class="line-chart" viewBox="0 0 '+(dailyData.length*10)+' 120" preserveAspectRatio="none">';
+        h += '<polyline points="';
+        for(var i=0;i<dailyData.length;i++){
+          var x = i * 10 + 5;
+          var y = 115 - ((dailyData[i].tt/maxD) * 100);
+          h += x+","+y+" ";
+        }
+        h += '" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+        h += '<polyline points="';
+        for(var i=0;i<dailyData.length;i++){
+          var x = i * 10 + 5;
+          var y = 115 - ((dailyData[i].tt/maxD) * 100);
+          h += x+","+y+" ";
+        }
+        h += '" fill="none" stroke="rgba(59,130,246,0.15)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>';
+        h += '</svg>';
+      }
+      h += '</div>';
+      
+      // TABLE
+      h += '<div class="tw"><div class="tl">Penjualan Harian'+(BL?" "+BL:" 2026")+" ("+f.length+" baris)</div>";
+      h += '<div class="sc"><table><thead><tr>';
+      h += '<th style="text-align:left">Tgl</th><th>CP</th><th>MP</th><th>QP</th><th>JP</th><th>CS</th><th>MS</th><th>QS</th><th>JS</th><th>Total</th><th>K</th>';
+      h += '</tr></thead><tbody>';
+      for(var i=f.length-1;i>=0;i--){
+        var r=f[i];
+        h += '<tr'+(i%2==0?' style="background:#fafafa"':'')+'><td class="l">'+r.t+'</td>';
+        h += '<td>'+f(r.c1)+'</td><td>'+f(r.c2)+'</td><td>'+f(r.c3)+'</td><td>'+f(r.c4)+'</td>';
+        h += '<td>'+f(r.c5)+'</td><td>'+f(r.c6)+'</td><td>'+f(r.c7)+'</td><td>'+f(r.c8)+'</td>';
+        h += '<td style="font-weight:600;color:#2563eb">'+f(r.tt)+'</td><td>'+r.kj+'</td></tr>';
+      }
+      h += '</tbody></table></div></div>';
+      $("ct").innerHTML = h;
+    }
+    
+    function rL(){
+      if(!LC||!LP[LC]){ $("ct").innerHTML='<div class="loading">Tidak ada data LPH</div>'; return; }
+      var d = LP[LC];
+      var h = '<div style="margin-bottom:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">';
+      h += '<select onchange="LC=this.value;rL()">';
+      for(var i=0;i<LD.length;i++) h += '<option value="'+LD[i]+'"'+(LC==LD[i]?" selected":"")+'>'+LD[i]+'</option>';
+      h += '</select>';
+      h += '<button class="bt-p" onclick="window.print()">Cetak</button>';
+      h += '</div>';
+      
+      // Daily chart for LPH
+      h += '<div class="daily-chart"><div class="chart-title">Omzet per Hari (Mei 2026)</div>';
+      // Build chart from LPH data
+      var lphKeys = [];
+      for(var i=0;i<LD.length;i++) lphKeys.push(LD[i]);
+      // Get total values from LPH
+      var lphVals = [];
+      for(var i=0;i<lphKeys.length;i++){
+        var ld = LP[lphKeys[i]];
+        var tot = 0;
+        if(ld && ld.rr){
+          for(var j=0;j<ld.rr.length;j++){
+            var t = ld.rr[j].t.replace("Rp","").replace(/\./g,"").replace(",","").trim();
+            var n = parseInt(t) || 0;
+            if(n > tot) tot = n;
+          }
+        }
+        lphVals.push(tot);
+      }
+      var maxL = 0;
+      for(var i=0;i<lphVals.length;i++){ if(lphVals[i] > maxL) maxL = lphVals[i]; }
+      if(lphKeys.length > 0) {
+        h += '<svg class="line-chart" viewBox="0 '+(maxL>7000000?"-2000000":"0")+' '+(lphKeys.length*20)+' 140" preserveAspectRatio="none">';
+        h += '<polyline points="';
+        for(var i=0;i<lphKeys.length;i++){
+          var x = i * 20 + 10;
+          var y = 130 - ((lphVals[i]/Math.max(maxL,1)) * 110);
+          h += x+","+y+" ";
+        }
+        h += '" fill="none" stroke="#059669" stroke-width="2"/>';
+        h += '</svg>';
+      }
+      h += '</div>';
+      
+      // Table
+      h += '<div class="tw"><div style="text-align:center;padding:10px;border-bottom:1px solid #eee">';
+      h += '<b style="font-size:13px">LAPORAN PENJUALAN HARIAN (LPH)</b><br>';
+      h += '<span style="font-size:10px;color:#999">APOTEK BALI BAGAS MEDIKA</span>';
+      if(d.tg) h += '<br><b style="font-size:11px">TANGGAL: '+d.tg+'</b>';
+      h += '</div><table><thead><tr>';
+      h += '<th style="text-align:left">URAIAN</th><th>PAGI</th><th>SIANG</th><th>TOTAL</th>';
+      h += '</tr></thead><tbody>';
+      for(var i=0;i<d.rr.length;i++){
+        var r=d.rr[i];
+        h += '<tr'+(i%2?' style="background:#f8fafc"':'')+'><td class="l" style="font-weight:'+(r.u.toUpperCase()=="KUNJUNGAN"?600:400)+'">'+r.u+'</td>';
+        h += '<td>'+r.p+'</td><td>'+r.s+'</td><td style="font-weight:600">'+r.t+'</td></tr>';
+      }
+      h += '</tbody></table></div>';
+      $("ct").innerHTML = h;
+    }
+    
+    function rF(){
+      var f = FB ? FA.filter(function(x){ return x.b == FB; }) : FA;
+      var l=0,bl=0,n=0,pv=0;
+      for(var i=0;i<f.length;i++){ if(f[i].nb) l++; else bl++; n+=f[i].jm; if(!f[i].nb) pv+=f[i].jm; }
+      
+      var h = '<div style="margin-bottom:8px">';
+      for(var i=0;i<bn.length;i++){
+        h += '<button class="bt'+(FB==bn[i]?" on":"")+'" onclick="FB=\''+(FB==bn[i]?"":"")+bn[i]+"\';rF()">"+bn[i]+"</button>";
+      }
+      h += '<button class="bt'+(FB==""?" on":"")+'" onclick="FB=\'\';rF()">Semua</button>';
+      h += '</div>';
+      
+      h += '<div class="gr">';
+      h += '<div class="card"><div class="lb">Total'+(FB?" "+FB:"")+'</div><div class="vl" style="font-size:18px">'+f.length+'</div></div>';
+      h += '<div class="card"><div class="lb">Lunas</div><div class="vl" style="font-size:18px;color:#10b981">'+l+'</div></div>';
+      h += '<div class="card"><div class="lb">Belum</div><div class="vl" style="font-size:18px;color:#ef4444">'+bl+'</div></div>';
+      h += '<div class="card"><div class="lb">Nilai Total</div><div class="vl" style="font-size:16px;color:#8b5cf6">'+f(n)+'</div></div>';
+      h += '<div class="card"><div class="lb">Piutang</div><div class="vl" style="font-size:16px;color:#dc2626">'+f(pv)+'</div></div>';
+      h += '</div>';
+      
+      // Pie chart: Lunas vs Belum
+      var total = l + bl;
+      var lunasDeg = total > 0 ? (l/total)*360 : 0;
+      h += '<div class="chart-wrap" style="text-align:center"><div class="chart-title">Status Pembayaran</div>';
+      h += '<svg width="120" height="120" viewBox="0 0 120 120">';
+      h += '<circle cx="60" cy="60" r="50" fill="none" stroke="#fee2e2" stroke-width="20"/>';
+      if(lunasDeg > 0){
+        var rad = (lunasDeg-90)*Math.PI/180;
+        var x = 60 + 50*Math.cos(rad);
+        var y = 60 + 50*Math.sin(rad);
+        var large = lunasDeg > 180 ? 1 : 0;
+        h += '<path d="M60,10 A50,50 0 '+large+',1 '+x+','+y+'" fill="none" stroke="#10b981" stroke-width="20"/>';
+      }
+      h += '</svg>';
+      h += '<div style="margin-top:4px;font-size:10px;color:#999">Lunas: '+l+' | Belum: '+bl+'</div>';
+      h += '</div>';
+      
+      h += '<div class="tw"><div class="tl">Faktur 2026 ('+f.length+' faktur)</div>';
+      h += '<div class="sc"><table><thead><tr>';
+      h += '<th style="text-align:left">Bln</th><th style="text-align:left">No</th><th style="text-align:left">PBF</th><th>Nilai</th><th>Status</th>';
+      h += '</tr></thead><tbody>';
+      var maxShow = Math.min(f.length, 300);
+      for(var i=0;i<maxShow;i++){
+        var d=f[i];
+        h += '<tr><td class="l">'+d.b+'</td><td class="l">'+d.no+'</td><td class="l">'+d.pf+'</td>';
+        h += '<td>'+f(d.jm)+'</td>';
+        h += '<td style="text-align:center"><span class="bdg '+(d.nb?"bdg-green":"bdg-red")+'">'+(d.nb?"LUNAS":"BELUM")+'</span></td></tr>';
+      }
+      h += '</tbody></table></div></div>';
+      $("ct").innerHTML = h;
+    }
+    
+    rT(); r("p");
+    
+  } catch(e) {
+    $("ct").innerHTML = '<div class="loading" style="color:#dc2626">Error: '+e.message+'</div>';
+  }
+};
+xhr.onerror = function() {
+  document.getElementById("ct").innerHTML = '<div class="loading" style="color:#dc2626">Gagal memuat data</div>';
+};
+xhr.send();
+</script>
+</body>
+</html>
