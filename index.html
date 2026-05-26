@@ -39,15 +39,16 @@ td.l{text-align:left}
 .sel{padding:8px 12px;border:1px solid #d1d5db;border-radius:5px;font-size:13px}
 .bp{padding:8px 14px;border:none;border-radius:5px;background:#1e40af;color:#fff;font-size:12px;font-weight:bold;cursor:pointer}
 @media print {
-  @page { margin: 0; size: landscape; }
+  @page { margin: 10mm; size: portrait; }
   body { margin: 0; padding: 0; }
-  .h, .t, .f, .sel, .bp { display: none !important; }
+  .t, .f, .sel, .bp { display: none !important; }
   #c1 { display: block !important; }
-  #pc, #pch, #pf, ._pb { display: none !important; }
+  #pc, #pch, #pf { display: none !important; }
+  .h { background:#1e40af; color:#fff; padding:10px; text-align:center; font-size:14px; font-weight:bold; -webkit-print-color-adjust: exactly; print-color-adjust: exact; }
   .c { max-width: 100%; padding: 0; }
   .tw { border-radius: 0; box-shadow: none; }
   table { font-size: 9px; }
-  td, th { padding: 4px; }
+  td, th { padding: 3px; }
 }
 </style>
 </head>
