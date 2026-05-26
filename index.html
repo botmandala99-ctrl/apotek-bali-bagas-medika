@@ -38,6 +38,17 @@ td.l{text-align:left}
 .bg2{background:#fee2e2;color:#dc2626}
 .sel{padding:8px 12px;border:1px solid #d1d5db;border-radius:5px;font-size:13px}
 .bp{padding:8px 14px;border:none;border-radius:5px;background:#1e40af;color:#fff;font-size:12px;font-weight:bold;cursor:pointer}
+@media print {
+  @page { margin: 0; size: landscape; }
+  body { margin: 0; padding: 0; }
+  .h, .t, .f, .sel, .bp { display: none !important; }
+  #c1 { display: block !important; }
+  #pc, #pch, #pf, ._pb { display: none !important; }
+  .c { max-width: 100%; padding: 0; }
+  .tw { border-radius: 0; box-shadow: none; }
+  table { font-size: 9px; }
+  td, th { padding: 4px; }
+}
 </style>
 </head>
 <body>
