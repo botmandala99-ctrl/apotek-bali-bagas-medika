@@ -70,7 +70,7 @@ td.l{text-align:left}
 function ml(){
   var u=document.getElementById("u").value;
   var p=document.getElementById("p").value;
-  if(u=="udiyana"&&p=="123456"){
+  var users={"udiyana":"123456","surya":"123456","fanny":"123456"};if(users[u]&&users[u]==p){
     localStorage.setItem("apotek_login","ok");
     document.getElementById("login").style.display="none";
   }else{
