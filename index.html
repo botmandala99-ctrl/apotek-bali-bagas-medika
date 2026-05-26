@@ -181,8 +181,11 @@ xhr.onload = function() {
         var tot = 0;
         if(ld && ld.rr){
           for(var j=0;j<ld.rr.length;j++){
-            var t = ld.rr[j].t.replace("Rp","").replace(/\./g,"").replace(",","").trim();
-            var n = parseInt(t) || 0;
+            var totVal = ld.rr[j].t;
+            if(totVal.indexOf("Rp")>=0) totVal = totVal.substring(2);
+            while(totVal.indexOf(".")>=0) totVal = totVal.replace(".","");
+            totVal = totVal.replace(",","").trim();
+            var n = parseInt(totVal) || 0;
             if(n > tot) tot = n;
           }
         }
