@@ -94,7 +94,7 @@ function rP(){
   var mo = 0;
   for(var i=0;i<BN.length;i++) if((BM[BN[i]]||0)>mo) mo=BM[BN[i]];
   var cc = ["#3b82f6","#8b5cf6","#ec4899","#f97316","#10b981","#14b8a6","#f59e0b"];
-  h += '<div class="bc" id="pch">';
+  h += '<div class="bc" id="pch" style="display:flex;align-items:center;justify-content:center;min-height:80px"><span style="font-size:11px;color:#9ca3af">Memuat diagram...</span>';
   for(var i=0;i<BN.length;i++){
     var v = BM[BN[i]]||0;
     var pct = mo>0?(v/mo)*65:0;
