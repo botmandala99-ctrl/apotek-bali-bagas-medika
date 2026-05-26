@@ -103,7 +103,7 @@ function rP(){
   h += '</div>';
   
   h += '<div class="tw"><div class="tl">Penjualan Harian (<span id="pcnt">'+P.length+'</span> baris)</div>';
-  h += '<div class="s"><table><tr><th style="text-align:left">Tgl</th><th>CP</th><th>MP</th><th>QP</th><th>JP</th><th>CS</th><th>MS</th><th>QS</th><th>JS</th><th>Total</th><th>K</th></tr><tbody id="pb">';
+  h += '<div class="s"><table><tr><th style="text-align:left">Tgl</th><th style="border-right:2px solid #d1d5db">CP</th><th style="border-right:2px solid #d1d5db">MP</th><th style="border-right:2px solid #d1d5db">QP</th><th style="border-right:2px solid #d1d5db">JP</th><th style="border-left:2px solid #d1d5db">CS</th><th>MS</th><th>QS</th><th>JS</th><th>Total</th><th>K</th></tr><tbody id="pb">';
   
   for(var i=P.length-1;i>=0;i--){
     var r = P[i];
@@ -154,7 +154,7 @@ function fl(i){
   var bh="";
   for(var i=f.length-1;i>=0;i--){
     var r=f[i];
-    bh+='<tr'+(i%2==0?' class="n"':'')+'><td class="l">'+r.t+'</td><td>'+fm(r.c1)+'</td><td>'+fm(r.c2)+'</td><td>'+fm(r.c3)+'</td><td>'+fm(r.c4)+'</td><td>'+fm(r.c5)+'</td><td>'+fm(r.c6)+'</td><td>'+fm(r.c7)+'</td><td>'+fm(r.c8)+'</td><td style="font-weight:bold">'+fm(r.tt)+'</td><td>'+r.kj+'</td></tr>';
+    bh+='<tr'+(i%2==0?' class="n"':'')+'><td class="l">'+r.t+'</td><td>'+fm(r.c1)+'</td><td>'+fm(r.c2)+'</td><td>'+fm(r.c3)+'</td><td>'+fm(r.c4)+'</td><td style="border-left:2px solid #d1d5db">'+fm(r.c5)+'</td><td>'+fm(r.c6)+'</td><td>'+fm(r.c7)+'</td><td>'+fm(r.c8)+'</td><td style="font-weight:bold">'+fm(r.tt)+'</td><td>'+r.kj+'</td></tr>';
   }
   document.getElementById("pb").innerHTML = bh;
   document.getElementById("pcnt").innerHTML = f.length;
