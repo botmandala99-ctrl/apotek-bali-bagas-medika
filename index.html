@@ -179,12 +179,12 @@ function rL(){
   h += '<div style="text-align:center;padding:8px;border-bottom:1px solid #eee">';
   h += '<div style="font-size:12px;font-weight:bold">LAPORAN PENJUALAN HARIAN (LPH) - APOTEK BALI BAGAS MEDIKA</div>';
   h += '<div style="font-size:10px;color:#374151;font-weight:600">'+last+'</div></div>';
-  h += '<table><tr><th style="text-align:left">URAIAN</th><th>PAGI</th><th>SIANG</th><th>TOTAL</th></tr>';
+  h += '<table style="border-collapse:collapse;width:100%"><tr><th style="text-align:left;border:1px solid #d1d5db;padding:6px;background:#f9fafb">URAIAN</th><th style="text-align:center;border:1px solid #d1d5db;padding:6px;background:#f9fafb">PAGI</th><th style="text-align:center;border:1px solid #d1d5db;padding:6px;background:#f9fafb">SIANG</th><th style="text-align:center;border:1px solid #d1d5db;padding:6px;background:#f9fafb">TOTAL</th></tr>';
   
   for(var i=0;i<d.rr.length;i++){
     var r=d.rr[i];
     var fw = (r.u.indexOf("TARGET")>=0||r.u.indexOf("PENCAPAIAN")>=0||r.u.indexOf("GAP")>=0)?"700":"400";
-    h += '<tr'+(i%2?' class="n"':'')+'><td class="l" style="font-weight:'+fw+'">'+r.u+'</td><td>'+r.p+'</td><td>'+r.s+'</td><td style="font-weight:bold">'+r.t+'</td></tr>';
+    h += '<tr'+(i%2?' class="n"':'')+'><td class="l" style="border:1px solid #e5e7eb;padding:5px;font-weight:'+fw+'">'+r.u+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center">'+r.p+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center">'+r.s+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center;font-weight:bold">'+r.t+'</td></tr>';
   }
   h += '</table></div>';
   document.getElementById("lph_content").innerHTML = h;
@@ -198,11 +198,11 @@ function rl(){
   var h = '<div style="text-align:center;padding:8px;border-bottom:1px solid #eee">';
   h += '<div style="font-size:12px;font-weight:bold">LAPORAN PENJUALAN HARIAN (LPH) - APOTEK BALI BAGAS MEDIKA</div>';
   h += '<div style="font-size:10px;color:#374151;font-weight:600">'+dt+'</div></div>';
-  h += '<table><tr><th style="text-align:left">URAIAN</th><th>PAGI</th><th>SIANG</th><th>TOTAL</th></tr>';
+  h += '<table style="border-collapse:collapse;width:100%"><tr><th style="text-align:left;border:1px solid #d1d5db;padding:6px;background:#f9fafb">URAIAN</th><th style="text-align:center;border:1px solid #d1d5db;padding:6px;background:#f9fafb">PAGI</th><th style="text-align:center;border:1px solid #d1d5db;padding:6px;background:#f9fafb">SIANG</th><th style="text-align:center;border:1px solid #d1d5db;padding:6px;background:#f9fafb">TOTAL</th></tr>';
   for(var i=0;i<d.rr.length;i++){
     var r=d.rr[i];
     var fw = (r.u.indexOf("TARGET")>=0||r.u.indexOf("PENCAPAIAN")>=0||r.u.indexOf("GAP")>=0)?"700":"400";
-    h += '<tr'+(i%2?' class="n"':'')+'><td class="l" style="font-weight:'+fw+'">'+r.u+'</td><td>'+r.p+'</td><td>'+r.s+'</td><td style="font-weight:bold">'+r.t+'</td></tr>';
+    h += '<tr'+(i%2?' class="n"':'')+'><td class="l" style="border:1px solid #e5e7eb;padding:5px;font-weight:'+fw+'">'+r.u+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center">'+r.p+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center">'+r.s+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center;font-weight:bold">'+r.t+'</td></tr>';
   }
   h += '</table>';
   document.getElementById("ltw").innerHTML = h;
