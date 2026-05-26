@@ -199,11 +199,19 @@ function rL(){
     var fw = (r.u.indexOf("TARGET")>=0||r.u.indexOf("PENCAPAIAN")>=0||r.u.indexOf("GAP")>=0)?"700":"400";
     // Auto-fill % PENCAPAIAN from target & omzet
     if(r.u.indexOf("PENCAPAIAN")>=0 && (r.t.indexOf("-")>=0 || r.t.indexOf("Rp 0")>=0 || r.t.indexOf("Rp0")>=0)){
-      if(window._lph_target>0){var _pct=Math.round((window._lph_omzet/window._lph_target)*100);r.p=_pct+'%';r.s=_pct+'%';r.t=_pct+'%';}
+      // Parse pagi siang total
+      function _pp(s){return parseInt(s.replace(/[. ]/g,'').replace(/[^0-9-]/g,''))||0;}
+      var _tp=_pp(r.p)||0,_ts=_pp(r.s)||0,_tt=_pp(r.t)||0;
+      // Parse target
+      if(window._lph_tp>0){r.p=Math.round((_tp/window._lph_tp)*100)+'%';}
+      if(window._lph_ts>0){r.s=Math.round((_ts/window._lph_ts)*100)+'%';}
+      if(window._lph_tt>0){r.t=Math.round((_tt/window._lph_tt)*100)+'%';}
     }
-    // Track target & omzet from previous rows
-    if(r.u.indexOf("TARGET")>=0){window._lph_target=parseInt(r.t.replace(/[^0-9]/g,''))||0;}
-    if(r.u.indexOf("OMZET")>=0){window._lph_omzet=parseInt(r.t.replace(/[^0-9]/g,''))||0;}
+    // Track target from TARGET SHIFT row
+    if(r.u.indexOf("TARGET")>=0){
+      function _pp(s){return parseInt(s.replace(/[. ]/g,'').replace(/[^0-9-]/g,''))||0;}
+      window._lph_tp=_pp(r.p);window._lph_ts=_pp(r.s);window._lph_tt=_pp(r.t);
+    }
     h += '<tr'+(i%2?' class="n"':'')+'><td class="l" style="border:1px solid #e5e7eb;padding:5px;font-weight:'+fw+'">'+r.u+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center">'+r.p+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center">'+r.s+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center;font-weight:bold">'+r.t+'</td></tr>';
   }
   h += '</table></div>';
@@ -224,11 +232,19 @@ function rl(){
     var fw = (r.u.indexOf("TARGET")>=0||r.u.indexOf("PENCAPAIAN")>=0||r.u.indexOf("GAP")>=0)?"700":"400";
     // Auto-fill % PENCAPAIAN from target & omzet
     if(r.u.indexOf("PENCAPAIAN")>=0 && (r.t.indexOf("-")>=0 || r.t.indexOf("Rp 0")>=0 || r.t.indexOf("Rp0")>=0)){
-      if(window._lph_target>0){var _pct=Math.round((window._lph_omzet/window._lph_target)*100);r.p=_pct+'%';r.s=_pct+'%';r.t=_pct+'%';}
+      // Parse pagi siang total
+      function _pp(s){return parseInt(s.replace(/[. ]/g,'').replace(/[^0-9-]/g,''))||0;}
+      var _tp=_pp(r.p)||0,_ts=_pp(r.s)||0,_tt=_pp(r.t)||0;
+      // Parse target
+      if(window._lph_tp>0){r.p=Math.round((_tp/window._lph_tp)*100)+'%';}
+      if(window._lph_ts>0){r.s=Math.round((_ts/window._lph_ts)*100)+'%';}
+      if(window._lph_tt>0){r.t=Math.round((_tt/window._lph_tt)*100)+'%';}
     }
-    // Track target & omzet from previous rows
-    if(r.u.indexOf("TARGET")>=0){window._lph_target=parseInt(r.t.replace(/[^0-9]/g,''))||0;}
-    if(r.u.indexOf("OMZET")>=0){window._lph_omzet=parseInt(r.t.replace(/[^0-9]/g,''))||0;}
+    // Track target from TARGET SHIFT row
+    if(r.u.indexOf("TARGET")>=0){
+      function _pp(s){return parseInt(s.replace(/[. ]/g,'').replace(/[^0-9-]/g,''))||0;}
+      window._lph_tp=_pp(r.p);window._lph_ts=_pp(r.s);window._lph_tt=_pp(r.t);
+    }
     h += '<tr'+(i%2?' class="n"':'')+'><td class="l" style="border:1px solid #e5e7eb;padding:5px;font-weight:'+fw+'">'+r.u+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center">'+r.p+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center">'+r.s+'</td><td style="border:1px solid #e5e7eb;padding:5px;text-align:center;font-weight:bold">'+r.t+'</td></tr>';
   }
   h += '</table>';
