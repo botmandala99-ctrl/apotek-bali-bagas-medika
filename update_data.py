@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-import json, re, urllib.request, sys
+import json, re, urllib.request
+from datetime import datetime, timedelta
 
 API_KEY = 'AIzaSyDsipVkCmWiokk0RgQY5TaZmv-XaItzMOs'
 S26 = '12ifCX85urqUxt67Ad5xr26ffzGxvGNz5FFZT38oKZM8'
 FSID = '1f0xEiBz5Mzu79zxks1Ew0lfAdwQu-7VKvKxaUcz3VzU'
 LSID = '1Pl9uQvDSq4qWVT6MzqWCiZoI4Oga0wMhVu7wFwMoW4I'
 G26 = {'Jan':0,'Feb':1981407338,'Mar':1445967367,'Apr':1565950911,'Mei':2013738206,'Jun':163552086,'Jul':1190948522}
-GF = {'Jan':0,'Feb':1881517497,'Mar':901744559,'Apr':551469341,'Mei':1750587883,'Jun':1146229567,'Jul':2100896413}
-BN = ["Jan","Feb","Mar"]
+GF = {'Jan':0,'Feb':1881517497,'Mar':901744559}
+BN = ['Jan','Feb','Mar']
 
 def gv(sid, gid):
     url = f'https://docs.google.com/spreadsheets/d/{sid}/gviz/tq?tqx=out:json&tq=&gid={gid}&key={API_KEY}'
     try:
-        d = urllib.request.urlopen(url, timeout=15).read().decode('utf-8')
-        m = re.search(r'.setResponse((.+));', d)
+        d = urllib.request.urlopen(url, timeout=15).read().decode()
+        m = re.search(r'.setResponse\((.+)\);', d)
         if not m: return [], []
         j = json.loads(m.group(1))
         rows = j.get('table',{}).get('rows',[])
@@ -33,6 +34,33 @@ def gv(sid, gid):
         return vals, fvals
     except: return [], []
 
+
+# Auto-get LPH GIDs
+try:
+    u = urllib.request.urlopen(f'https://sheets.googleapis.com/v4/spreadsheets/{LSID}?key={API_KEY}')
+    js = json.loads(u.read().decode())
+    lph_gids = [(s['properties']['sheetId'], s['properties']['title']) for s in js.get('sheets',[])]
+    lph_gids.sort(key=lambda x: x[1])
+except:
+    lph_gids = [[0, "01 MEI 2026"], [456439832, "02 MEI 2026"], [527597092, "03 MEI 2026"], [556096497, "04 MEI 2026"], [1269180586, "05 MEI 2026"], [2142536146, "06 MEI 2026"], [233866909, "07 MEI 2026"], [762801297, "08 MEI 2026"], [1049487848, "09 MEI 2026"], [1508503184, "10 MEI 2026"], [993453517, "11 MEI 2026"], [1668129507, "12 MEI 2026"], [2092131821, "13 MEI 2026"], [1004144241, "14 MEI 2026"], [1047687838, "15 MEI 2026"], [443409010, "16 MEI 2026"], [456923066, "17 MEI 2026"], [1269826655, "18 MEI 2026"], [338679084, "19 MEI 2026"], [543521900, "20 MEI 2026"], [742200864, "21 MEI 2026"], [1375079069, "22 MEI 2026"], [256317823, "23 MEI 2026"], [246287253, "24 MEI 2026"], [2057032683, "25 MEI 2026"], [936206001, "26 MEI 2026"], [1704465439, "27 MEI 2026"], [2106161542, "28 MEI 2026"], [76269533, "29 MEI 2026"], [226069595, "30 MEI 2026"], [867905108, "31 MEI 2026"]]
+
+L = {}; LD = []
+for gid, title in lph_gids:
+    vals, fvals = gv(LSID, gid)
+    if len(vals) < 2: continue
+    cr = []
+    for j in range(len(vals)):
+        v = vals[j]
+        txt = v[0] if v else ''
+        if txt == 'URAIAN': continue
+        if txt or (len(v) > 1 and v[1]) or (len(v) > 2 and v[2]) or (len(v) > 3 and v[3]):
+            cr.append({'u':txt, 'p':v[1] if len(v)>1 else '', 's':v[2] if len(v)>2 else '', 't':v[3] if len(v)>3 else ''})
+    if cr:
+        L[title] = {'rr': cr}
+        LD.append(title)
+        om = next((x['t'] for x in cr if x['u'] == 'OMZET'), '?')
+        print(f'  {title}: omzet={om}', flush=True)
+
 P = []
 for b in BN:
     vals, fvals = gv(S26, G26[b])
@@ -50,42 +78,18 @@ for b in BN:
         v, f = vals[i], fvals[i]
         if len(f) >= 5 and f[0]:
             try:
-                no = f[0]
-                pf = f[1] if len(f) > 1 else ''
+                no = f[0]; pf = f[1] if len(f) > 1 else ''
                 jm = int(float(v[2])) if len(f) > 2 and v[2] else 0
                 cb = v[3] if len(f) > 3 else ''
                 jt = f[4] if len(f) > 4 and f[4] else (v[4] if len(f) > 4 else '')
                 nb = (v[5] if len(f) > 5 else '') == 'TRUE'
                 F.append({'no':no,'b':b,'nb':nb,'pf':pf,'jm':jm,'cb':cb,'jt':jt})
             except: pass
-lunas = sum(1 for f in F if f['nb'])
-print(f'F: {len(F)} (lunas={lunas} belum={len(F)-lunas})', flush=True)
-
-L = {}; LD = []
-cur = ''; cr = []
-vals, fvals = gv(LSID, 0)
-for i in range(len(vals)):
-    v = vals[i]
-    serial = v[3] if len(v) > 3 else ''
-    if serial and re.match(r'^44\d{2,3}', serial):
-        from datetime import datetime, timedelta
-        try:
-            d = datetime(1899,12,30) + timedelta(days=float(serial))
-            months = {1:'JAN',2:'FEB',3:'MAR',4:'APR',5:'MEI',6:'JUN',7:'JUL',8:'AGU',9:'SEP',10:'OKT',11:'NOV',12:'DES'}
-            tgl = f'{d.day} {months[d.month]} {d.year}'
-            if cur and cr: L[cur] = {'rr': cr}; LD.append(cur)
-            cur = tgl; cr = []; continue
-        except: pass
-    txt = v[0] if v else ''
-    if txt == 'URAIAN': continue
-    if cur and len(v) >= 4:
-        if txt or v[1] or v[2] or v[3]:
-            cr.append({'u':txt,'p':v[1] if len(v)>1 else '','s':v[2] if len(v)>2 else '','t':v[3] if len(v)>3 else ''})
-if cur and cr: L[cur] = {'rr': cr}; LD.append(cur)
-print(f'L: {len(LD)}', flush=True)
+print(f'F: {len(F)} (lunas={sum(1 for f in F if f["nb"])} belum={len(F)-sum(1 for f in F if f["nb"])})', flush=True)
 
 BO, TO, TK = {}, 0, 0
 for p in P: TO+=p['tt']; TK+=p['kj']; BO[p['b']]=BO.get(p['b'],0)+p['tt']
+
 data = {'P':P,'F':F,'L':L,'D':LD,'B':BO,'TO':TO,'TK':TK}
 
 with open('/tmp/lphfix/index.html') as f: html = f.read()
