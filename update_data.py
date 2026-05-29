@@ -7,8 +7,8 @@ S26 = '12ifCX85urqUxt67Ad5xr26ffzGxvGNz5FFZT38oKZM8'
 FSID = '1f0xEiBz5Mzu79zxks1Ew0lfAdwQu-7VKvKxaUcz3VzU'
 LSID = '1Pl9uQvDSq4qWVT6MzqWCiZoI4Oga0wMhVu7wFwMoW4I'
 G26 = {'Jan':0,'Feb':1981407338,'Mar':1445967367,'Apr':1565950911,'Mei':2013738206,'Jun':163552086,'Jul':1190948522}
-GF = {'Jan':0,'Feb':914339812,'Mar':1942627049,'Apr':85697732,'Mei':452486501}
-BN = ['Jan','Feb','Mar','Apr','Mei']
+GF = {'Jan':0,'Feb':914339812,'Mar':1942627049,'Apr':85697732,'Mei':452486501,'Jun':1375533550}
+BN = ['Jan','Feb','Mar','Apr','Mei','Jun']
 
 def gv(sid, gid):
     url = f'https://docs.google.com/spreadsheets/d/{sid}/gviz/tq?tqx=out:json&tq=&gid={gid}&key={API_KEY}'
