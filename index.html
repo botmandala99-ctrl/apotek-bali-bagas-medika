@@ -123,7 +123,7 @@ function rP(){
   
   for(var i=P.length-1;i>=0;i--){
     var r = P[i];
-    h += '<tr'+(i%2==0?' class="n"':'')+'><td class="l">'+fm(r.t)+'</td>';
+    h += '<tr'+(i%2==0?' class="n"':'')+'><td class="l">'+r.t+'</td>';
     h += '<td>'+fm(r.c1)+'</td><td>'+fm(r.c2)+'</td><td>'+fm(r.c3)+'</td><td>'+fm(r.c4)+'</td>';
     h += '<td>'+fm(r.c5)+'</td><td>'+fm(r.c6)+'</td><td>'+fm(r.c7)+'</td><td>'+fm(r.c8)+'</td>';
     h += '<td style="font-weight:bold">'+fm(r.tt)+'</td><td>'+r.kj+'</td></tr>';
@@ -170,7 +170,7 @@ function fl(i){
   var bh="";
   for(var i=f.length-1;i>=0;i--){
     var r=f[i];
-    bh+='<tr'+(i%2==0?' class="n"':'')+'><td class="l">'+fm(r.t)+'</td><td>'+fm(r.c1)+'</td><td>'+fm(r.c2)+'</td><td>'+fm(r.c3)+'</td><td>'+fm(r.c4)+'</td><td style="border-left:2px solid #d1d5db">'+fm(r.c5)+'</td><td>'+fm(r.c6)+'</td><td>'+fm(r.c7)+'</td><td>'+fm(r.c8)+'</td><td style="font-weight:bold">'+fm(r.tt)+'</td><td>'+r.kj+'</td></tr>';
+    bh+='<tr'+(i%2==0?' class="n"':'')+'><td class="l">'+r.t+'</td><td>'+fm(r.c1)+'</td><td>'+fm(r.c2)+'</td><td>'+fm(r.c3)+'</td><td>'+fm(r.c4)+'</td><td style="border-left:2px solid #d1d5db">'+fm(r.c5)+'</td><td>'+fm(r.c6)+'</td><td>'+fm(r.c7)+'</td><td>'+fm(r.c8)+'</td><td style="font-weight:bold">'+fm(r.tt)+'</td><td>'+r.kj+'</td></tr>';
   }
   document.getElementById("pb").innerHTML = bh;
   document.getElementById("pcnt").innerHTML = f.length;
