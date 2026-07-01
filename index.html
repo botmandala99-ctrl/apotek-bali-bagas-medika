@@ -284,7 +284,17 @@ function ff(i){
 async function loadData(){
   try {
     var r = await fetch('data.json');
-    window.D = await r.json();
+    var raw = await r.json();
+    // Map from long key names to short key names used by the code
+    window.D = {
+      P: raw.penjualan,
+      F: raw.faktur,
+      L: raw.lph,
+      D: raw.lph_dates,
+      B: raw.bulan_omzet,
+      TO: raw.total_omzet,
+      TK: raw.total_kunjungan
+    };
   }catch(e){
     document.body.innerHTML = '<div style="padding:20px;text-align:center"><h3>Gagal muat data</h3><p>'+e.message+'</p></div>';
     return;
