@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Apotek Dashboard - Bali Bagas Medika",
-  description: "Monitoring penjualan, LPH, dan faktur apotek",
+  description: "Dashboard monitoring Apotek Bali Bagas Medika",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="id">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );
