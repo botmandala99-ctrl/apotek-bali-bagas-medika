@@ -146,6 +146,21 @@ export default function Home(){
         }),
       ]);
       for(const [bln,rows] of Object.entries(a26)) kj[2026][bln]=rows.reduce((s,x)=>s+x.kj,0);
+
+      /* Rekap 2026 (gid=471302708): ambil total omzet+kunjungan per bulan utk isi bulan yg belum ada
+         (misal AGUSTUS, yg tab hariannya blm dikasih user). */
+      try{
+        const rekapCsv=await fetchCSV(S26,471302708);
+        const rr=rekapCsv.split(NL).map(l=>l.split(",").map(x=>x.replace(/"/g,"").trim()));
+        const mp={JAN:"Jan",FEB:"Feb",MAR:"Mar",APR:"Apr",MEI:"Mei",JUN:"Jun",JUL:"Jul",AUG:"Agu",AGU:"Agu",SEP:"Sep",OKT:"Okt",NOV:"Nov",NOP:"Nop",DES:"Des"};
+        for(const c of rr){
+          const k=mp[(c[0]||"").toUpperCase()];
+          if(k){ const om=p(c[1]); const kun=p(c[4]);
+            if(om>0 && d.om?.[2026]?.[k]==null) d.om[2026][k]=om;
+            if(kun>0 && kj[2026]?.[k]==null) kj[2026][k]=kun;
+          }
+        }
+      }catch(e){}
       setD({om:d,kj});
 
       /* Faktur */
