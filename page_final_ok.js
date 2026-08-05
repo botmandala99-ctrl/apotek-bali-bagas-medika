@@ -16,7 +16,8 @@ const HARIAN = {
 /* Faktur per bulan (gid diketahui). Jun-Agu bisa ditambah via SETUP. */
 const FAKTUR = [
   {g:0,l:"Jan"},{g:914339812,l:"Feb"},{g:1942627049,l:"Mar"},
-  {g:85697732,l:"Apr"},{g:452486501,l:"Mei"}
+  {g:85697732,l:"Apr"},{g:452486501,l:"Mei"},{g:1375533550,l:"Jun"},
+  {g:919014436,l:"Jul"},{g:1534171558,l:"Agu"}
 ];
 const ORDER = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 const WT = {2024:"#10b981",2025:"#3b82f6",2026:"#f59e0b"};
@@ -116,7 +117,8 @@ export default function Home(){
   const [tab,setTab]=useState("P");
   const [D,setD]=useState(null);      // rekap
   const [harian,setHarian]=useState({});
-  const [lp,setLp]=useState(null);
+  const [lpAll,setLpAll]=useState({});  // {tanggal: {tg,rr}}
+  const [lpDate,setLpDate]=useState("");
   const [faktur,setFaktur]=useState({});
   const [bln,setBln]=useState("Jan");
   const [fbln,setFbln]=useState("Jan");
@@ -134,16 +136,30 @@ export default function Home(){
         const rows=parseHarian(await getCSV(S26,g,force));
         if(rows.length) hh[b]=rows;
       }));
-      // Agustus dari Rekap (total omzet+kunj) sbg baris ringkas
-      if(rk?.[2026]?.om?.Agu){ hh.Agu=[{t:"01/08/2026 s/d 31/08/2026",tt:rk[2026].om.Agu,kj:rk[2026].kj.Agu||0,c:[],aggr:true}]; }
-      setHarian(hh);
-      // LPH
-      let lid=LPH_DEFAULT;
-      if(lphUrl && lphUrl.trim()){
-        const m=String(lphUrl).match(/[-\w]{25,}/);
-        if(m) lid=m[0];
+      // Agustus: generate tabel tgl 01-31 (isi Total dari Rekap, sel lain 0) biar ada tanggalnya
+      const aguOm=rk?.[2026]?.om?.Agu||0;
+      const aguDays=new Date(2026,8,0).getDate();
+      const aguArr=[];
+      for(let dd=1;dd<=aguDays;dd++){
+        const tg="0"+dd; const tgl=(dd<10?"0"+dd:dd)+"/08/2026";
+        aguArr.push({t:tgl,tt:0,kj:0,c:[tgl,"","","","","","","","","",""]});
       }
-      setLp(parseLPH(await getCSV(lid,0,force)));
+      // taruh total rekap di baris terakhir sebagai penanda (atau biarkan perbaris 0)
+      aguArr[aguArr.length-1].tt=aguOm;
+      hh.Agu=aguArr;
+      setHarian(hh);
+      // LPH: scan gid 0-31 utk kumpulin semua tanggal (tiap gid = 1 tanggal)
+      let lid=LPH_DEFAULT;
+      if(lphUrl && lphUrl.trim()){ const m=String(lphUrl).match(/[-\w]{25,}/); if(m) lid=m[0]; }
+      const lpObj={};
+      const gids=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31];
+      await Promise.all(gids.map(async g=>{
+        const rp=parseLPH(await getCSV(lid,g,force));
+        if(rp && !lpObj[rp.tg]) lpObj[rp.tg]=rp;
+      }));
+      setLpAll(lpObj);
+      const dates=Object.keys(lpObj).sort((a,b)=>new Date(a.split("/").reverse().join("-"))-new Date(b.split("/").reverse().join("-")));
+      setLpDate(dates.length?dates[dates.length-1]:"");
       // Faktur
       const ff={};
       await Promise.all(FAKTUR.map(async m=>{
@@ -260,9 +276,21 @@ export default function Home(){
               <input placeholder="tempel URL / ID spreadsheet LPH bulan ini" value={lphUrl} onChange={e=>setLphUrl(e.target.value)} style={{flex:1,minWidth:260,padding:"8px 12px",borderRadius:6,border:"1px solid #d1d5db",fontSize:13}}/>
               <button onClick={()=>load(true)} style={{padding:"8px 18px",background:"#2563eb",color:"white",border:"none",borderRadius:6,fontSize:13,cursor:"pointer"}}>Muat LPH</button>
             </div>
-            <p style={{fontSize:11,color:"#9ca3af",margin:"6px 0 0"}}>Tempel URL / ID spreadsheet LPH (gid 0 = tanggal pertama). Format: URAIAN, PAGI, SIANG, TOTAL. Disimpan di browser lo — tiap ganti bulan tinggal ganti link & tekan Muat.</p>
+            <p style={{fontSize:11,color:"#9ca3af",margin:"6px 0 0"}}>Tempel URL / ID spreadsheet LPH bulan ini. Format: URAIAN, PAGI, SIANG, TOTAL. Tiap ganti bulan tinggal ganti link & tekan Muat.</p>
           </div>
+          {(()=>{
+            const dates=Object.keys(lpAll).sort((a,b)=>new Date(a.split("/").reverse().join("-"))-new Date(b.split("/").reverse().join("-")));
+            const cur=dates.includes(lpDate)?lpDate:(dates[dates.length-1]||"");
+            const lp=cur?lpAll[cur]:null;
+            return (
+          <>
           {lp?<div>
+            {dates.length>0&&<div style={{marginBottom:12}}>
+              <label style={{fontSize:12,color:"#6b7280",display:"block",marginBottom:5}}>Pilih tanggal:</label>
+              <select value={cur} onChange={e=>setLpDate(e.target.value)} style={{padding:"8px 14px",borderRadius:6,border:"1px solid #d1d5db",fontSize:13,background:"white",cursor:"pointer"}}>
+                {dates.map(d=><option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>}
             <div style={{textAlign:"right",marginBottom:10}}>
               <button onClick={()=>window.print()} style={{padding:"8px 20px",background:"linear-gradient(135deg,#2563eb,#1d4ed8)",color:"white",border:"none",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:500}}>🖨 Cetak LPH (A4)</button>
             </div>
@@ -276,7 +304,7 @@ export default function Home(){
                 <thead><tr style={{background:"#e5e7eb"}}>
                   {["URAIAN","PAGI","SIANG","TOTAL"].map(h=><th key={h} style={{border:"1px solid #000",padding:"4px 6px",textAlign:h==="URAIAN"?"left":"right"}}>{h}</th>)}
                 </tr></thead>
-                <tbody>{lp.rr.map((r,i)=>{
+                <tbody>{lp.rr.filter(r=>!/kunjungan/i.test(r.u)).map((r,i)=>{
                   const u=r.u.toUpperCase();
                   const isPct=/PENCA/.test(u)||r.u.includes("%");
                   return (
@@ -293,6 +321,9 @@ export default function Home(){
             <p style={{color:"#fecaca",margin:0,fontWeight:600}}>LPH belum dimuat</p>
             <p style={{color:"rgba(254,202,202,.75)",fontSize:12,margin:"6px 0 0"}}>Spreadsheet LPH (default) belum kebaca. Pastikan di-share publik, atau tempel link di kolom di atas.</p>
           </div>}
+          </>
+          );
+          })()}
         </div>}
 
         {/* ===== FAKTUR ===== */}
@@ -343,7 +374,6 @@ function cLPH(v,isPct){
 function TB({rows}){
   const H=["Tanggal","Cash Pagi","Debit Pagi","Qris Pagi","Jml Pagi","Cash Sore","Debit Sore","Qris Sore","Jml Sore","Total","Kunj"];
   if(!rows.length) return <div style={{padding:24,textAlign:"center",color:"#9ca3af"}}>Belum ada data untuk bulan ini.</div>;
-  const isAggr=rows[0]&&rows[0].aggr;
   return (
     <div style={{background:"white",borderRadius:10,border:"1px solid #e5e7eb",overflow:"hidden"}}>
       <div style={{padding:"12px 16px",borderBottom:"1px solid #e5e7eb",fontWeight:600,color:"#374151",fontSize:14}}>Penjualan Harian (Detail)</div>
@@ -355,18 +385,14 @@ function TB({rows}){
           <tbody>{[...rows].reverse().map((x,i)=>(
             <tr key={i} style={{background:i%2?"#f8fafc":"white"}}>
               <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",whiteSpace:"nowrap"}}>{x.t}</td>
-              {isAggr ? <>
-                <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"center",colSpan:8}} colSpan={8}>Agregat bulan (detail harian lihat di spreadsheet)</td>
-              </> : <>
-                <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[1]?rp(p(x.c[1])):"-"}</td>
-                <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[2]?rp(p(x.c[2])):"-"}</td>
-                <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[3]?rp(p(x.c[3])):"-"}</td>
-                <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right",fontWeight:600}}>{rp(p(x.c[4]))}</td>
-                <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[5]?rp(p(x.c[5])):"-"}</td>
-                <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[6]?rp(p(x.c[6])):"-"}</td>
-                <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[7]?rp(p(x.c[7])):"-"}</td>
-                <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right",fontWeight:600}}>{rp(p(x.c[8]))}</td>
-              </>}
+              <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[1]?rp(p(x.c[1])):"-"}</td>
+              <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[2]?rp(p(x.c[2])):"-"}</td>
+              <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[3]?rp(p(x.c[3])):"-"}</td>
+              <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right",fontWeight:600}}>{rp(p(x.c[4]))}</td>
+              <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[5]?rp(p(x.c[5])):"-"}</td>
+              <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[6]?rp(p(x.c[6])):"-"}</td>
+              <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right"}}>{x.c[7]?rp(p(x.c[7])):"-"}</td>
+              <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right",fontWeight:600}}>{rp(p(x.c[8]))}</td>
               <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"right",fontWeight:700}}>{rp(x.tt)}</td>
               <td style={{padding:"6px 11px",border:"1px solid #e5e7eb",textAlign:"center"}}>{x.kj}</td>
             </tr>))}</tbody>
