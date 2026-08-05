@@ -16,8 +16,7 @@ export async function GET(request: NextRequest) {
       },
       redirect: "follow",               // penting: ikutin 307 Google
       signal: ctrl.signal,
-      cache: "no-store",
-    });
+      cache: "no-store",    });
 
     clearTimeout(timer);
 
@@ -30,7 +29,8 @@ export async function GET(request: NextRequest) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "no-store",
+        // cache singkat di edge (60s) biar nggak berat, tapi tetap fresh tiap refresh
+        "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=60",
       },
     });
   } catch (error) {

@@ -35,28 +35,42 @@ function fr(n){ return typeof n==="number"?("Rp "+n.toLocaleString("id-ID")):"-"
 function fmtRibuan(n){ return typeof n==="number"?n.toLocaleString("id-ID"):String(n); }
 async function fetchCSV(sid,gid){
   try{
-    const r=await fetch("/api/gsheet?url="+encodeURIComponent("https://docs.google.com/spreadsheets/d/"+sid+"/export?format=csv&gid="+gid));
+    const key="gsc_"+sid+"_"+gid;
+    const url="/api/gsheet?url="+encodeURIComponent("https://docs.google.com/spreadsheets/d/"+sid+"/export?format=csv&gid="+gid);
+    // cache lokal 5 menit biar buka ulang cepet
+    try{
+      const c=localStorage.getItem(key);
+      if(c){ const j=JSON.parse(c); if(Date.now()-j.t<5*60*1000) return j.v; }
+    }catch(e){}
+    const r=await fetch(url,{cache:"no-store"});
     if(!r.ok) return "";
-    return await r.text();
+    const t=await r.text();
+    try{ localStorage.setItem(key,JSON.stringify({v:t,t:Date.now()})); }catch(e){}
+    return t;
   }catch(e){ return ""; }
 }
-/* Parse penjualan harian — auto-detect format kolom.
-   Baris data: c[0]=tgl. 2026/2025 & sebagian 2024 = 11 kolom (TOTAL idx9, KUNJ idx10).
-   2024 Jan (gid 0) = 4 kolom (TOTAL idx3, KUNJ idx4). */
+/* Parse penjualan harian — auto-detect posisi kolom TOTAL & KUNJUNGAN dari header.
+   Robust buat format 4/5/11/14 kolom (2024 beda-beda, 2025/2026 konsisten 11). */
 function parseHarian(csv){
-  const out=[]; const ll=csv.split(NL).filter(l=>l.trim()).slice(4);
-  for(const l of ll){
+  const out=[];
+  const ll=csv.split(NL).filter(l=>l.trim());
+  // cari baris header yg mulai 'TANGGAL' -> posisi kolom TOTAL & KUNJUNGAN
+  let hi=-1, totI=9, kunI=10;
+  for(let i=0;i<ll.length&&i<10;i++){
+    if(ll[i].trim().toUpperCase().startsWith("TANGGAL")){ hi=i; break; }
+  }
+  if(hi>=0){
+    const H=ll[hi].split(",").map(x=>x.replace(/"/g,"").trim().toUpperCase());
+    const trov=H.indexOf("TOTAL"); if(trov>=0) totI=trov;
+    const krov=H.indexOf("KUNJUNGAN"); if(krov>=0) kunI=krov;
+  }
+  const dataRows=ll.slice(hi+1);
+  for(const l of dataRows){
     const c=l.split(",").map(x=>x.replace(/"/g,"").trim());
     const tgl=c[0];
     if(!DR.test(tgl)) continue;
-    // c[9]=TOTAL, c[10]=KUNJ (format 11 kolom) — kalau c[9] angka & c[10] angka
-    const t9=p(c[9]), k10=p(c[10]);
-    const t3=p(c[3]), k4=p(c[4]);
-    let tt, kj;
-    if(c[9]!=="" && c[10]!==""){ tt=t9; kj=k10; }              // 11 kolom
-    else if(c[3]!=="" && c[4]!==""){ tt=t3; kj=k4; }           // 4 kolom
-    else { tt=t9||t3; kj=k10||k4; }
-    if(tt>0||kj>0) out.push({t:tgl,tt,kj,c:c.slice(0,9)});
+    const tt=p(c[totI]); const kj=p(c[kunI]);
+    if(tt>0||kj>0) out.push({t:tgl,tt,kj,c});
   }
   return out;
 }
@@ -286,7 +300,7 @@ export default function Home(){
             </table>
           </div>
         </div>}
-        {!lp&&<div style={{padding:32,textAlign:"center",color:"rgba(255,255,255,.5)"}}>Pilih tanggal</div>}
+        {!lp&&<div style={{padding:32,textAlign:"center",background:"rgba(220,38,38,.12)",border:"1px solid #fca5a5",borderRadius:10}}><p style={{color:"#fecaca",margin:0,fontWeight:600}}>Data LPH Agustus belum muncul</p><p style={{color:"rgba(254,202,202,.7)",fontSize:13,margin:"6px 0 0"}}>Spreadsheet LPH Agustus belum bisa diakses: masih private, URL-nya salah, atau belum diisi.<br/>Tolong pastikan spreadsheet LPH Agustus di-share publik (Share → “Anyone with link” → Viewer) lalu kasih link yang benar ke admin.</p></div>}
       </div>}
 
       {/* ============ FAKTUR (urut Jan-Des) ============ */}
