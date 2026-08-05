@@ -9,7 +9,7 @@ const S26 = "12ifCX85urqUxt67Ad5xr26ffzGxvGNz5FFZT38oKZM8"; // Admin Penjualan 2
 const S25 = "1hf-QOppWoC4oxzVIfluS82y8ZIRLv5AMP7ghpLRHeeE";
 const S24 = "1X8sU5TbwIFrfva-Hv3lJwKmNWBAXlF4wKWLq4TUkXkY";
 const FSID = "1f0xEiBz5Mzu79zxks1Ew0lfAdwQu-7VKvKxaUcz3VzU"; // Faktur
-const LAID = "1KiBthvKts3dOCLkRH2kdcyoI6seyP2AmMFi_ADh76Wc"; // LPH Agustus
+const LAID = "1KiBThvKts3dOCLkRH2kdcyoI6seyP2AmMFi_ADh76Wc"; // LPH Agustus (FIX: huruf T besar — sebelumnya t kecil -> 404)
 
 /* gid per bulan 2026 (Admin Penjualan) */
 const M26 = {
