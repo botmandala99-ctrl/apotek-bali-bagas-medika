@@ -20,7 +20,7 @@ const M26 = {
 };
 /* gid per bulan 2024 & 2025 (untuk diagram 3 tahun) */
 const G24 = { Jan:0,Feb:1462383099,Mar:907772167,Apr:232891112,Mei:282938849,Jun:731458776,Jul:1406355561,Agu:1803306864,Sep:1496176196,Okt:1600880255,Nov:139141189,Des:1094972947 };
-const G25 = { Jan:0,Feb:200361189,Mar:948223844,Apr:1168220512,Mei:1057815698,Jun:278075545,Jul:10910240,Agu:126222887,Sep:1341963010,Okt:1387254622,Nop:2067058499,Des:889768507 };
+const G25 = { Jan:0,Feb:200361189,Mar:948223844,Apr:1168220512,Mei:1057815698,Jun:278075545,Jul:10910240,Agu:1341963010,Sep:2067058499,Okt:null,Nop:126222887,Des:1387254622 };
 /* Faktur per bulan (urut Jan-Des) */
 const FM = [{g:0,l:"Jan"},{g:914339812,l:"Feb"},{g:1942627049,l:"Mar"},{g:85697732,l:"Apr"},{g:452486501,l:"Mei"}];
 const WT = {2024:"#10b981",2025:"#3b82f6",2026:"#f59e0b"};
@@ -100,26 +100,39 @@ export default function Home(){
 
       /* 2026 penjualan harian (bulan yang ada gid-nya) */
       const a26={};
-      await Promise.all(Object.entries(M26).map(async ([bln,gid])=>{
+      await Promise.all(Object.entries(M26).filter(([,gid])=>gid!=null).map(async ([bln,gid])=>{
         const ps=parseHarian(await fetchCSV(S26,gid));
         if(ps.length>0) a26[bln]=ps;
       }));
       setP(a26);
 
-      /* 2024 & 2025 — total per bulan utk diagram */
+      /* 2024 & 2025 — total omzet+kunjungan per bulan utk diagram */
       const d={2024:{},2025:{},2026:{}};
       await Promise.all([
-        ...Object.entries(G24).map(async ([bln,gid])=>{
+        ...Object.entries(G24).filter(([,g])=>g!=null).map(async ([bln,gid])=>{
           const ps=parseHarian(await fetchCSV(S24,gid));
-          if(ps.length>0) d[2024][bln]=ps.reduce((s,x)=>s+x.tt,0);
+          if(ps.length>0){ d[2024][bln]=ps.reduce((s,x)=>s+x.tt,0) }
         }),
-        ...Object.entries(G25).map(async ([bln,gid])=>{
+        ...Object.entries(G25).filter(([,g])=>g!=null).map(async ([bln,gid])=>{
           const ps=parseHarian(await fetchCSV(S25,gid));
-          if(ps.length>0) d[2025][bln]=ps.reduce((s,x)=>s+x.tt,0);
+          if(ps.length>0){ d[2025][bln]=ps.reduce((s,x)=>s+x.tt,0) }
         }),
       ]);
       for(const [bln,rows] of Object.entries(a26)) d[2026][bln]=rows.reduce((s,x)=>s+x.tt,0);
-      setD(d);
+      // simpan juga kunjungan utk diagram
+      const kj={2024:{},2025:{},2026:{}};
+      await Promise.all([
+        ...Object.entries(G24).filter(([,g])=>g!=null).map(async ([bln,gid])=>{
+          const ps=parseHarian(await fetchCSV(S24,gid));
+          if(ps.length>0) kj[2024][bln]=ps.reduce((s,x)=>s+x.kj,0);
+        }),
+        ...Object.entries(G25).filter(([,g])=>g!=null).map(async ([bln,gid])=>{
+          const ps=parseHarian(await fetchCSV(S25,gid));
+          if(ps.length>0) kj[2025][bln]=ps.reduce((s,x)=>s+x.kj,0);
+        }),
+      ]);
+      for(const [bln,rows] of Object.entries(a26)) kj[2026][bln]=rows.reduce((s,x)=>s+x.kj,0);
+      setD({om:d,kj});
 
       /* Faktur */
       const sf={};
@@ -132,7 +145,7 @@ export default function Home(){
       }));
       setF(sf);
 
-      const kb=Object.keys(a26); if(kb.length) setBA(kb[kb.length-1]);
+      const kb=ORDER.filter(b=>a26[b]); if(kb.length) setBA(kb[kb.length-1]);
       const ds=Object.keys(allLP).sort((a,b)=>{const[d1,m1,y1]=a.split("/");const[d2,m2,y2]=b.split("/");return new Date(y1,m1-1,d1)-new Date(y2,m2-1,d2);});
       if(ds.length) setLD(ds[ds.length-1]);
     }catch(e){ setE("Err: "+(e.message||e)); }
@@ -147,7 +160,8 @@ export default function Home(){
   const lp=LD?LP[LD]:null;
 
   /* data line chart 3 tahun */
-  const lineData=ORDER.map(b=>({b, 2024:D[2024][b]||0, 2025:D[2025][b]||0, 2026:D[2026][b]||0}));
+  const lineData=ORDER.map(b=>({b, 2024:D.om?.[2024]?.[b]||0, 2025:D.om?.[2025]?.[b]||0, 2026:D.om?.[2026]?.[b]||0}));
+  const lineDataKj=ORDER.map(b=>({b, 2024:D.kj?.[2024]?.[b]||0, 2025:D.kj?.[2025]?.[b]||0, 2026:D.kj?.[2026]?.[b]||0}));
 
   if(L) return (
     <div style={{display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",minHeight:"100vh",background:"linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#1e40af 100%)",gap:16}}>
@@ -180,7 +194,7 @@ export default function Home(){
         <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{color:"rgba(255,255,255,.7)",fontSize:12,fontWeight:500}}>Bulan 2026:</span>
           <select value={BA} onChange={e=>setBA(e.target.value)} style={{padding:"6px 10px",borderRadius:6,border:"1px solid #d1d5db",fontSize:13,background:"white"}}>
-            {Object.keys(P).map(b=><option key={b} value={b}>{b} 2026</option>)}
+            {ORDER.filter(b=>P[b]).map(b=><option key={b} value={b}>{b} 2026</option>)}
           </select>
           <span style={{color:"rgba(255,255,255,.6)",fontSize:11}}>Total 2026: {fr(smt)}</span>
         </div>
@@ -213,7 +227,26 @@ export default function Home(){
           </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12}}>
-          {[2024,2025,2026].map(y=>{const tot=Object.values(D[y]).reduce((s,v)=>s+(v||0),0);return <K key={y} label={"Total "+y} v={fr(tot)} c={WT[y]}/>;})}
+          {[2024,2025,2026].map(y=>{const tot=Object.values(D.om?.[y]||{}).reduce((s,v)=>s+(v||0),0);return <K key={y} label={"Total Omzet "+y} v={fr(tot)} c={WT[y]}/>;})}
+        </div>
+
+        {/* CHART KUNJUNGAN */}
+        <div style={{background:"white",borderRadius:12,border:"1px solid #e5e7eb",overflow:"hidden",marginTop:20}}>
+          <div style={{padding:"12px 16px",borderBottom:"1px solid #e5e7eb",fontSize:14,fontWeight:600,color:"#374151"}}>Kunjungan Bulanan — 2024 vs 2025 vs 2026</div>
+          <div style={{padding:16}}>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={lineDataKj} margin={{top:8,right:16,left:0,bottom:0}}>
+                <CartesianGrid strokeDasharray="3 3"/>
+                <XAxis dataKey="b" tick={{fontSize:11}}/>
+                <YAxis tick={{fontSize:11}}/>
+                <Tooltip formatter={(v,n)=>[String(v)+" kunjungan",n]}/>
+                <Legend/>
+                <Line type="monotone" dataKey="2024" stroke={WT[2024]} strokeWidth={2.5} dot={{r:3}} name="2024"/>
+                <Line type="monotone" dataKey="2025" stroke={WT[2025]} strokeWidth={2.5} dot={{r:3}} name="2025"/>
+                <Line type="monotone" dataKey="2026" stroke={WT[2026]} strokeWidth={3} dot={{r:4}} name="2026"/>
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>}
 
@@ -315,23 +348,23 @@ function TabelDetail({rows}){
   <div style={{background:"rgba(255,255,255,.95)",backdropFilter:"blur(10px)",borderRadius:12,border:"1px solid rgba(255,255,255,.6)",overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,.08)",marginBottom:20}}>
     <div style={{padding:"12px 16px",borderBottom:"1px solid #e5e7eb",fontSize:14,fontWeight:600,color:"#374151"}}>Penjualan Harian (Detail)</div>
     <div style={{maxHeight:460,overflow:"auto"}}>
-      <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+      <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,border:"1px solid #e5e7eb"}}>
         <thead style={{background:"#f1f5f9",position:"sticky",top:0}}><tr>
-          {H.map((h,i)=><th key={i} style={{textAlign:i>0&&i<H.length-1?"right":(i===H.length-1?"center":"left"),padding:"8px 10px",borderBottom:"1px solid #e5e7eb",fontSize:11,color:"#475569",whiteSpace:"nowrap"}}>{h}</th>)}
+          {H.map((h,i)=><th key={i} style={{textAlign:i>0&&i<H.length-1?"right":(i===H.length-1?"center":"left"),padding:"8px 10px",border:"1px solid #d1d5db",borderBottom:"1px solid #cbd5e1",fontSize:11,color:"#475569",whiteSpace:"nowrap"}}>{h}</th>)}
         </tr></thead>
         <tbody>{[...rows].reverse().map((d,i)=>(
           <tr key={i} style={{background:i%2===0?"white":"#f8fafc"}}>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",whiteSpace:"nowrap"}}>{d.t}</td>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",textAlign:"right"}}>{frVal(d.c[1])}</td>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",textAlign:"right"}}>{frVal(d.c[2])}</td>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",textAlign:"right"}}>{frVal(d.c[3])}</td>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",textAlign:"right",fontWeight:600}}>{frVal(d.c[4])}</td>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",textAlign:"right"}}>{frVal(d.c[5])}</td>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",textAlign:"right"}}>{frVal(d.c[6])}</td>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",textAlign:"right"}}>{frVal(d.c[7])}</td>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",textAlign:"right",fontWeight:600}}>{frVal(d.c[8])}</td>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",textAlign:"right",fontWeight:700}}>{frVal(d.tt)}</td>
-            <td style={{padding:"6px 10px",borderBottom:"1px solid #f1f5f9",textAlign:"center"}}>{fmtRibuan(d.kj)}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",whiteSpace:"nowrap"}}>{d.t}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",textAlign:"right"}}>{frVal(d.c[1])}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",textAlign:"right"}}>{frVal(d.c[2])}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",textAlign:"right"}}>{frVal(d.c[3])}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",textAlign:"right",fontWeight:600}}>{frVal(d.c[4])}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",textAlign:"right"}}>{frVal(d.c[5])}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",textAlign:"right"}}>{frVal(d.c[6])}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",textAlign:"right"}}>{frVal(d.c[7])}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",textAlign:"right",fontWeight:600}}>{frVal(d.c[8])}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",textAlign:"right",fontWeight:700}}>{frVal(d.tt)}</td>
+            <td style={{padding:"6px 10px",border:"1px solid #e5e7eb",textAlign:"center"}}>{fmtRibuan(d.kj)}</td>
           </tr>))}</tbody>
       </table>
     </div>
