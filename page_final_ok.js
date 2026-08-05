@@ -31,7 +31,7 @@ const WT = {2024:"#10b981",2025:"#3b82f6",2026:"#f59e0b"};
 const ORDER = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
 /* ============ HELPERS ============ */
-const NL = String.fromCharCode(92,110);
+const NL = "\n"; // newline asli (FIX: String.fromCharCode(92,110) = literal backslash-n yg bikin split gagal)
 const DR = /^\d{2}\/\d{2}\/\d{4}$/;
 const DN = /^\d+$/;
 function p(v){return parseInt(String(v||"0").replace(/[Rp\s,."]/g,""),10)||0;}
