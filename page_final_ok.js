@@ -45,6 +45,18 @@ async function getCSV(sid,gid,force){
   return t;
 }
 
+/* Ambil daftar SEMUA gid (tab) dari spreadsheet — via /htmlview?sle=true yg mengekspos gid tiap sheet */
+async function listGids(sid){
+  try{
+    const url="/api/gsheet?url="+encodeURIComponent("https://docs.google.com/spreadsheets/d/"+sid+"/htmlview?sle=true");
+    const r=await fetch(url,{cache:"no-store"});
+    if(!r.ok) return [];
+    const t=await r.text();
+    const gs=[...new Set([...t.matchAll(/gid=([0-9]+)/g)].map(m=>m[1]))];
+    return gs.length?gs:[];
+  }catch(e){ return []; }
+}
+
 /* Parse satu baris CSV dengan benar (handle tanda kutip yang berisi koma) */
 function csvLine(s){
   const out=[]; let cur="",inq=false;
@@ -148,12 +160,12 @@ export default function Home(){
       aguArr[aguArr.length-1].tt=aguOm;
       hh.Agu=aguArr;
       setHarian(hh);
-      // LPH: scan gid 0-31 utk kumpulin semua tanggal (tiap gid = 1 tanggal)
+      // LPH: list SEMUA gid (tab) otomatis dari /htmlview?sle=true, lalu baca tiap tab = 1 tanggal
       let lid=LPH_DEFAULT;
       if(lphUrl && lphUrl.trim()){ const m=String(lphUrl).match(/[-\w]{25,}/); if(m) lid=m[0]; }
+      const gids=await listGids(lid);
       const lpObj={};
-      const gids=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31];
-      await Promise.all(gids.map(async g=>{
+      await Promise.all((gids.length?gids:[0]).map(async g=>{
         const rp=parseLPH(await getCSV(lid,g,force));
         if(rp && !lpObj[rp.tg]) lpObj[rp.tg]=rp;
       }));
