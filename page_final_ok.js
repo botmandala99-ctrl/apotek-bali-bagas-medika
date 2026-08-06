@@ -361,6 +361,9 @@ export default function Home(){
         </div>}
 
       </div>
+      <div style={{textAlign:"center",padding:"14px 12px",fontSize:11,color:"#6b7280",borderTop:"1px solid rgba(255,255,255,.15)",marginTop:8}}>
+        &copy; {new Date().getFullYear()} Dashboard Apotek Bali Bagas Medika &mdash; Dikembangkan oleh <strong style={{color:"#dbeafe"}}>Udiyana Mandala</strong>
+      </div>
     </div>
   );
 }
