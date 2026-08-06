@@ -11,7 +11,7 @@ const LPH_DEFAULT = "1KiBThvKts3dOCLkRH2kdcyoI6seyP2AmMFi_ADh76Wc"; // LPH
 /* gid tab harian 2026 (Jan-Jul). Agustus & seterusnya bisa ditambah, atau pakai Rekap. */
 const HARIAN = {
   Jan:0, Feb:1981407338, Mar:1445967367, Apr:1565950911,
-  Mei:2013738206, Jun:163552086, Jul:1190948522
+  Mei:2013738206, Jun:163552086, Jul:1190948522, Agu:2071225787
 };
 /* Faktur per bulan (gid diketahui). Jun-Agu bisa ditambah via SETUP. */
 const FAKTUR = [
@@ -148,17 +148,6 @@ export default function Home(){
         const rows=parseHarian(await getCSV(S26,g,force));
         if(rows.length) hh[b]=rows;
       }));
-      // Agustus: generate tabel tgl 01-31 (isi Total dari Rekap, sel lain 0) biar ada tanggalnya
-      const aguOm=rk?.[2026]?.om?.Agu||0;
-      const aguDays=new Date(2026,8,0).getDate();
-      const aguArr=[];
-      for(let dd=1;dd<=aguDays;dd++){
-        const tg="0"+dd; const tgl=(dd<10?"0"+dd:dd)+"/08/2026";
-        aguArr.push({t:tgl,tt:0,kj:0,c:[tgl,"","","","","","","","","",""]});
-      }
-      // taruh total rekap di baris terakhir sebagai penanda (atau biarkan perbaris 0)
-      aguArr[aguArr.length-1].tt=aguOm;
-      hh.Agu=aguArr;
       setHarian(hh);
       // LPH: list SEMUA gid (tab) otomatis dari /htmlview?sle=true, lalu baca tiap tab = 1 tanggal
       let lid=LPH_DEFAULT;
